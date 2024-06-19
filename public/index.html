@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pastebin Code Upload</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    body {
+      background: url('https://i.imgur.com/lRbJKXL.gif') no-repeat center center fixed;
+      background-size: cover;
+      font-family: 'Times New Roman', Times, serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background-color: rgba(255, 255, 255, 0.7);
+      padding: 10px 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    textarea {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 20px;
+      font-size: 13px;
+      resize: vertical;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      background-color: #4CAF50;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    button i {
+      margin-right: 5px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #resultContainer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+      font-size: 16px;
+      color: darkcyan;
+      padding: 10px;
+      border: 1px solid darkcyan;
+      border-radius: 10px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-height: 200px;
+    }
+
+    #result {
+      margin-bottom: 10px;
+    }
+
+    #copyButton,
+    #downloadButton,
+    #rawButton {
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background-color: darkcyan;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+      margin: 5px;
+    }
+
+    #copyButton i,
+    #downloadButton i,
+    #rawButton i {
+      margin-right: 5px;
+    }
+
+    #copyButton:hover,
+    #downloadButton:hover,
+    #rawButton:hover {
+      background-color: #45a049;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 20px;
+      color: #777;
+      font-size: 14px;
+    }
+
+    #copyAlert {
+      position: fixed;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1><i class="fas fa-code"></i> Pastebin </h1>
+    <form id="pasteForm" action="/upload" method="post">
+      <label for="code">Paste your code here</label>
+      <textarea id="code" name="code" rows="10" required></textarea>
+      <button type="submit"><i class="fas fa-paper-plane"></i> Submit</button>
+    </form>
+    <div id="resultContainer">
+      <div id="result"></div>
+      <button id="copyButton" onclick="copyToClipboard()" style="display: none;"><i class="fas fa-clipboard"></i> Copy</button>
+      <button id="downloadButton" onclick="downloadCode()" style="display: none;"><i class="fas fa-download"></i> Download</button>
+      <button id="rawButton" onclick="viewRaw()" style="display: none;"><i class="fas fa-eye"></i> Raw</button>
+    </div>
+  </div>
+  <footer>
+    &copy; 2024 | HeruDev | All rights reserved.
+  </footer>
+
+  <div id="copyAlert" style="display: none;">Copied to clipboard</div>
+
+  <script>
+    document.getElementById('pasteForm').onsubmit = async function (e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const response = await fetch(form.action, {
+        method: form.method,
+        body: new URLSearchParams(formData)
+      });
+      const result = await response.text();
+      document.getElementById('result').innerHTML = result;
+      document.getElementById('copyButton').style.display = 'block';
+      document.getElementById('downloadButton').style.display = 'block';
+      document.getElementById('rawButton').style.display = 'block';
+    };
+
+    function copyToClipboard() {
+      const resultText = document.getElementById('result').innerText;
+      navigator.clipboard.writeText(resultText).then(() => {
+        const alertBox = document.getElementById('copyAlert');
+        alertBox.style.display = 'block';
+        setTimeout(() => {
+          alertBox.style.display = 'none';
+        }, 2000);
+      });
+    }
+
+    function downloadCode() {
+      const resultText = document.getElementById('result').innerText;
+      const blob = new Blob([resultText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'code.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function viewRaw() {
+      const resultText = document.getElementById('result').innerText;
+      const newWindow = window.open();
+      newWindow.document.write('<pre>' + resultText + '</pre>');
+    }
+  </script>
+</body>
+</html>
